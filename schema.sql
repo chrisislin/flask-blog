@@ -11,6 +11,6 @@ CREATE TABLE posts (
 
 CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT NOT NULL,
+    username TEXT NOT NULL,
     password TEXT NOT NULL
 );

@@ -2,6 +2,7 @@
 import sqlite3
 from flask import Flask, render_template, request, url_for, flash, redirect
 from werkzeug.exceptions import abort
+import models as dbHandler
 
 # Create a Flask application instance
 app = Flask(__name__)
@@ -28,7 +29,21 @@ def get_post(post_id):
 
 
 # Define a view function for the main route '/'
-@app.route('/')
+@app.route('/', methods=['POST', 'GET'])
+def login():
+    print(request.method)
+    print(request.form)
+    if request.method == 'POST' and request.form['username'] is not None and request.form['password'] is not None:
+        username = request.form['username']
+        password = request.form['password']
+        dbHandler.insertUser(username, password)
+        users = dbHandler.retrieveUsers()
+        return render_template('login.html', users=users)
+    else:
+        return render_template('login.html')
+
+
+@app.route('/home')
 def index():
     conn = get_db_connection()
     posts = conn.execute('SELECT * FROM posts').fetchall()
@@ -45,6 +60,7 @@ def post(post_id):
     # why? to be able to use it in the html page
     return render_template('post.html', post=post)
 
+
 @app.route('/create', methods=('GET', 'POST'))
 def create():
     # if the user clicked on Submit, it sends post request
@@ -56,16 +72,17 @@ def create():
         if not title:
             flash('Title is required!')
         else:
-            # Open a connection to databse
+            # Open a connection to database
             conn = get_db_connection()
             # Insert the new values in the db
             conn.execute('INSERT INTO posts (title, content) VALUES (?, ?)',
-                               (title, content))
+                         (title, content))
             conn.commit()
             conn.close()
             # Redirect the user to index page
             return redirect(url_for('index'))
     return render_template('create.html')
+
 
 @app.route('/<int:id>/edit', methods=('GET', 'POST'))
 def edit(id):
@@ -90,6 +107,7 @@ def edit(id):
 
     return render_template('edit.html', post=post)
 
+
 @app.route('/<int:id>/delete', methods=('POST',))
 def delete(id):
     post = get_post(id)
@@ -99,8 +117,10 @@ def delete(id):
     conn.close()
     flash('"{}" was successfully deleted!'.format(post['title']))
     return redirect(url_for('index'))
+
+
 # main driver function
 if __name__ == '__main__':
     # run() method of Flask class runs the application
     # on the local development server.
-    app.run(host="127.0.0.1", port=8080, threaded=True)
+    app.run(host="127.0.0.1", debug=True)
