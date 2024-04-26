@@ -31,20 +31,20 @@ def get_post(post_id):
 # Define a view function for the main route '/'
 @app.route('/', methods=['POST', 'GET'])
 def login():
-    print(request.method)
-    print(request.form)
-    if request.method == 'POST' and request.form['username'] is not None and request.form['password'] is not None:
+    if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        dbHandler.insertUser(username, password)
         users = dbHandler.retrieveUsers()
-        return render_template('login.html', users=users)
-    else:
-        return render_template('login.html')
+        for user in users:
+            if username == user[0] and password == user[1]:
+                return redirect(url_for('home'))
+        if 'register' in request.form:
+            dbHandler.insertUser(username, password)
+    return render_template('login.html')
 
 
 @app.route('/home')
-def index():
+def home():
     conn = get_db_connection()
     posts = conn.execute('SELECT * FROM posts').fetchall()
     conn.close()
