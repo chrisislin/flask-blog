@@ -2,11 +2,24 @@
 import sqlite3
 from flask import Flask, render_template, request, url_for, flash, redirect
 from werkzeug.exceptions import abort
-import models as dbHandler
+import models as db_handler
 
 # Create a Flask application instance
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your secret key'
+
+
+class User:
+    def __init__(self, email, password):
+        self.email = email
+        self.password = password
+        self.authenticated = False
+
+    def is_authenticated(self):
+        return self.authenticated
+
+
+test_user = User('email', 'password')
 
 
 def get_db_connection():
@@ -29,22 +42,30 @@ def get_post(post_id):
 
 
 # Define a view function for the main route '/'
+@app.route('/login', methods=['POST', 'GET'])
 @app.route('/', methods=['POST', 'GET'])
 def login():
+    print(request.form)
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        users = dbHandler.retrieveUsers()
+
+        users = db_handler.retrieve_users()
         for user in users:
             if username == user[0] and password == user[1]:
+                test_user.username = username
+                test_user.password = password
+                test_user.authenticated = True
                 return redirect(url_for('home'))
         if 'register' in request.form:
-            dbHandler.insertUser(username, password)
+            db_handler.insert_user(username, password)
     return render_template('login.html')
 
 
 @app.route('/home')
 def home():
+    if not test_user.is_authenticated():
+        return redirect(url_for('login'))
     conn = get_db_connection()
     posts = conn.execute('SELECT * FROM posts').fetchall()
     conn.close()
@@ -53,6 +74,9 @@ def home():
 
 @app.route('/<int:post_id>')
 def post(post_id):
+    if not test_user.is_authenticated():
+        return redirect(url_for('login'))
+
     # we got the post the user clicked on through the function we wrote before,
     # we save the value of the post in post variable
     post = get_post(post_id)
@@ -63,6 +87,9 @@ def post(post_id):
 
 @app.route('/create', methods=('GET', 'POST'))
 def create():
+    if not test_user.is_authenticated():
+        return redirect(url_for('login'))
+
     # if the user clicked on Submit, it sends post request
     if request.method == 'POST':
         # Get the title and save it in a variable
@@ -86,7 +113,9 @@ def create():
 
 @app.route('/<int:id>/edit', methods=('GET', 'POST'))
 def edit(id):
-    # Get the post to be edited by it's id
+    if not test_user.is_authenticated():
+        return redirect(url_for('login'))
+    # Get the post to be edited by its id
     post = get_post(id)
 
     if request.method == 'POST':
@@ -110,6 +139,8 @@ def edit(id):
 
 @app.route('/<int:id>/delete', methods=('POST',))
 def delete(id):
+    if not test_user.is_authenticated():
+        return redirect(url_for('login'))
     post = get_post(id)
     conn = get_db_connection()
     conn.execute('DELETE FROM posts WHERE id = ?', (id,))

@@ -1,7 +1,7 @@
 import sqlite3 as sql
 
 
-def insertUser(username, password):
+def insert_user(username, password):
     con = sql.connect("database.db")
     cur = con.cursor()
     cur.execute("INSERT INTO users (username,password) VALUES (?,?)", (username, password))
@@ -9,7 +9,7 @@ def insertUser(username, password):
     con.close()
 
 
-def retrieveUsers():
+def retrieve_users():
     con = sql.connect("database.db")
     cur = con.cursor()
     cur.execute("SELECT username, password FROM users")
