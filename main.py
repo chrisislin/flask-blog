@@ -107,7 +107,7 @@ def create():
             conn.commit()
             conn.close()
             # Redirect the user to index page
-            return redirect(url_for('index'))
+            return redirect(url_for('home'))
     return render_template('create.html')
 
 
@@ -132,7 +132,7 @@ def edit(id):
                          (title, content, id))
             conn.commit()
             conn.close()
-            return redirect(url_for('index'))
+            return redirect(url_for('home'))
 
     return render_template('edit.html', post=post)
 
@@ -147,7 +147,7 @@ def delete(id):
     conn.commit()
     conn.close()
     flash('"{}" was successfully deleted!'.format(post['title']))
-    return redirect(url_for('index'))
+    return redirect(url_for('home'))
 
 
 # main driver function
